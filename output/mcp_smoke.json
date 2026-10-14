@@ -1,0 +1,306 @@
+{
+  "generated_at": "2026-10-14T01:57:05+00:00",
+  "mcp_config": ".mcp.json -> campus-customs (stdio: .venv/Scripts/python.exe mcp_server/server.py)",
+  "database": "data/campus_customs_new.db",
+  "tools_listed_by_server": [
+    "get_open_tickets",
+    "get_ticket_context",
+    "check_stock_and_restock",
+    "get_cash_position",
+    "quote_discount",
+    "request_payment",
+    "request_purchase_order",
+    "create_draft",
+    "update_ticket_status"
+  ],
+  "tests": [
+    {
+      "prompt": "Use the campus-customs MCP server to pull everything linked to ticket 101 so Boss can decide who should work on it.",
+      "tool": "get_ticket_context",
+      "arguments": {
+        "ticket_id": 101
+      },
+      "output": {
+        "date_today": "2026-08-31",
+        "ticket": {
+          "id": 101,
+          "type": "customer_order",
+          "requester": "Tauhid Zaman",
+          "subject": "Bulldog tee",
+          "sku": "CC-TEE-WHITE",
+          "size": "S",
+          "qty": 1,
+          "lease_id": null,
+          "invoice_id": 501,
+          "status": "open",
+          "notes": "Needs a tee in size S.",
+          "created_at": "2026-08-31T09:15:00-04:00"
+        },
+        "product": {
+          "sku": "CC-TEE-WHITE",
+          "name": "Classic Bulldog Tee",
+          "requested_size": "S",
+          "requested_qty": 1,
+          "on_hand_in_size": 0,
+          "stock_all_sizes": {
+            "S": 0,
+            "M": 5,
+            "L": 3,
+            "XL": 2
+          },
+          "pricing": {
+            "unit_cost": 8.0,
+            "list_price": 28.0,
+            "unit_margin": 20.0,
+            "margin_pct": 71.4
+          }
+        },
+        "invoice": {
+          "id": 501,
+          "vendor_id": 1,
+          "vendor": "Bulldog Print Co",
+          "amount": 840.0,
+          "due_date": "2026-08-28",
+          "status": "open",
+          "description": "Rush reprint CC-TEE-WHITE S",
+          "days_until_due": -3,
+          "overdue": true,
+          "days_overdue": 3
+        },
+        "approval_requests": [],
+        "drafts": []
+      },
+      "verification": [
+        {
+          "check": "date_today matches desk.date_today",
+          "tool_value": "2026-08-31",
+          "database_value": "2026-08-31",
+          "pass": true
+        },
+        {
+          "check": "ticket requester",
+          "tool_value": "Tauhid Zaman",
+          "database_value": "Tauhid Zaman",
+          "pass": true
+        },
+        {
+          "check": "tee S on hand",
+          "tool_value": 0,
+          "database_value": 0,
+          "pass": true
+        },
+        {
+          "check": "linked invoice id",
+          "tool_value": 501,
+          "database_value": 501,
+          "pass": true
+        },
+        {
+          "check": "linked invoice amount",
+          "tool_value": 840.0,
+          "database_value": 840.0,
+          "pass": true
+        },
+        {
+          "check": "invoice days overdue (date_today - due_date)",
+          "tool_value": 3,
+          "database_value": 3,
+          "pass": true
+        }
+      ],
+      "all_checks_pass": true
+    },
+    {
+      "prompt": "Ticket 103: the Yale AI Club wants 20 CC-HOOD-NAVY hoodies in size M. Check stock and, if we are short, which vendor can restock, when, and whether they will ship.",
+      "tool": "check_stock_and_restock",
+      "arguments": {
+        "sku": "CC-HOOD-NAVY",
+        "size": "M",
+        "qty_needed": 20
+      },
+      "output": {
+        "date_today": "2026-08-31",
+        "sku": "CC-HOOD-NAVY",
+        "name": "Basic Hoodie Big Yale",
+        "size": "M",
+        "location": "Aisle A",
+        "qty_needed": 20,
+        "on_hand": 8,
+        "can_fill_now": 8,
+        "shortage": 12,
+        "pricing": {
+          "unit_cost": 22.0,
+          "list_price": 58.0,
+          "unit_margin": 36.0,
+          "margin_pct": 62.1
+        },
+        "restock": {
+          "vendor_id": 1,
+          "vendor": "Bulldog Print Co",
+          "specialty": "apparel reprint",
+          "lead_days": 5,
+          "po_qty": 12,
+          "po_cost": 264.0,
+          "vendor_will_ship": false,
+          "blocking_invoices": [
+            {
+              "id": 501,
+              "vendor_id": 1,
+              "vendor": "Bulldog Print Co",
+              "amount": 840.0,
+              "due_date": "2026-08-28",
+              "status": "open",
+              "description": "Rush reprint CC-TEE-WHITE S",
+              "days_until_due": -3,
+              "overdue": true,
+              "days_overdue": 3
+            }
+          ],
+          "eta_if_ordered_today": "2026-09-05",
+          "note": "Vendor has an open unpaid invoice and will not ship until it is paid (payment needs human approval)."
+        }
+      },
+      "verification": [
+        {
+          "check": "date_today matches desk.date_today",
+          "tool_value": "2026-08-31",
+          "database_value": "2026-08-31",
+          "pass": true
+        },
+        {
+          "check": "hoodie M on hand",
+          "tool_value": 8,
+          "database_value": 8,
+          "pass": true
+        },
+        {
+          "check": "shortage = 20 - on hand",
+          "tool_value": 12,
+          "database_value": 12,
+          "pass": true
+        },
+        {
+          "check": "vendor from vendors table",
+          "tool_value": "Bulldog Print Co",
+          "database_value": "Bulldog Print Co",
+          "pass": true
+        },
+        {
+          "check": "lead_days from vendors table",
+          "tool_value": 5,
+          "database_value": 5,
+          "pass": true
+        },
+        {
+          "check": "PO cost = shortage x unit_cost",
+          "tool_value": 264.0,
+          "database_value": 264.0,
+          "pass": true
+        },
+        {
+          "check": "blocking invoices = vendor's open invoices",
+          "tool_value": [
+            501
+          ],
+          "database_value": [
+            501
+          ],
+          "pass": true
+        },
+        {
+          "check": "vendor_will_ship is false while an invoice is open",
+          "tool_value": false,
+          "database_value": false,
+          "pass": true
+        }
+      ],
+      "all_checks_pass": true
+    },
+    {
+      "prompt": "Ticket 102: rent is due. Show our cash balance against every open invoice and rent payment, and tell me what we can afford without going negative.",
+      "tool": "get_cash_position",
+      "arguments": {},
+      "output": {
+        "date_today": "2026-08-31",
+        "accounts": [
+          {
+            "name": "checking",
+            "balance": 3400.0,
+            "date": "2026-08-31"
+          }
+        ],
+        "cash_balance": 3400.0,
+        "obligations": [
+          {
+            "kind": "invoice",
+            "ref_id": 501,
+            "payee": "Bulldog Print Co",
+            "amount": 840.0,
+            "due_date": "2026-08-28",
+            "days_until_due": -3,
+            "overdue": true,
+            "description": "Rush reprint CC-TEE-WHITE S",
+            "balance_after_if_paid": 2560.0,
+            "affordable_in_order": true
+          },
+          {
+            "kind": "rent",
+            "ref_id": 1,
+            "payee": "Elm City Properties",
+            "amount": 2400.0,
+            "due_date": "2026-09-02",
+            "days_until_due": 2,
+            "overdue": false,
+            "description": "Rent for Chapel Street shop",
+            "balance_after_if_paid": 160.0,
+            "affordable_in_order": true
+          }
+        ],
+        "total_obligations": 3240.0,
+        "balance_after_all_obligations": 160.0,
+        "pending_approval_requests": [],
+        "balance_if_all_pending_approved": 3400.0,
+        "recent_payments": [],
+        "rules": [
+          "Every payment needs human approval.",
+          "Refuse any payment larger than the current balance; cash never goes negative.",
+          "No revenue is modeled; cash only goes out."
+        ]
+      },
+      "verification": [
+        {
+          "check": "date_today matches desk.date_today",
+          "tool_value": "2026-08-31",
+          "database_value": "2026-08-31",
+          "pass": true
+        },
+        {
+          "check": "cash balance",
+          "tool_value": 3400.0,
+          "database_value": 3400.0,
+          "pass": true
+        },
+        {
+          "check": "total obligations = open invoices + rent",
+          "tool_value": 3240.0,
+          "database_value": 3240.0,
+          "pass": true
+        },
+        {
+          "check": "balance after all obligations",
+          "tool_value": 160.0,
+          "database_value": 160.0,
+          "pass": true
+        },
+        {
+          "check": "never negative after paying invoice + rent",
+          "tool_value": true,
+          "database_value": true,
+          "pass": true
+        }
+      ],
+      "all_checks_pass": true
+    }
+  ],
+  "all_tests_pass": true
+}
